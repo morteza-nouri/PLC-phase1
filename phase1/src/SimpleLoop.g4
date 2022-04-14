@@ -1,3 +1,1 @@
 grammar SimpleLoop;
-
-Token: [a];
