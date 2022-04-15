@@ -1,9 +1,30 @@
 grammar SimpleLoop;
 
-
-
+// Scopes
 OPEN_SCOPE          : '{ ';
 CLOSE_SCOPE         : '}';
+
+// Data Types
+INT                 : 'int';
+BOOL                : 'bool';
+FPTR                : 'fptr';
+SET                 : 'set';
+
+// Return
+RETURN              : 'return';
+
+// Identifier
+IDENTIFIER          : (LETTER | UNDERLINE)(LETTER | UNDERLINE | NUMBER);
+
+// Values
+TRUE                : 'true';
+FALSE               : 'false';
+ZERO                : '0';
+NUMBER              : [0-9];
+LETTER              : UPPERCASE | LOWERCASE;
+UPPERCASE           : [A-Z];
+LOWERCASE           :[a-z];
+NULL                : 'null';
 
 // Arithmetic operators
 PLUS                : '+';
@@ -29,13 +50,15 @@ ASSIGN              : '=';
 // Symbols
 COMMA               : ',';
 COLON               : ':';
-ACCESS              : '.';
-OPEN_PARENTHESES    : '(';
-CLOSE_PARENTHESES	: ')';
-OPEN_BRACKETS		: '[';
-CLOSE_BRACKERTS 	: ']';
-QUESTION            : '?';
+DOT                 : '.';
+OPAR                : '(';
+CPAR                : ')';
+OBRACKET	        : '[';
+CBRACKET 	        : ']';
+Ternary             : '?';
 UNDERLINE           : '_';
 
-
-
+// WhiteSpaces
+NEWLINE             : '\n';
+WS                  : [ \r\t] -> skip;
+COMMENT             : '#' ~[\r\n]* -> skip;

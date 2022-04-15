@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a33f134b-fc96-427c-8751-fd48ab708dff" name="Changes" comment="phase 1 started">
+    <list default="true" id="d3e13bdd-f1d4-409e-8ffe-efb7662ed6f1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SimpleLoop.g4" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleLoop.g4" afterDir="false" />
     </list>
@@ -16,7 +17,7 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProjectId" id="27mae08OB3H0XMICtce0lgyo92a" />
+  <component name="ProjectId" id="27pEg2KLeHISxo0KrWKu4SeeEvG" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -26,45 +27,21 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "last_opened_file_path": "C:/Users/Morteza Nouri/IdeaProjects/Compiler/antlr-4.9.2-complete.jar",
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.code.analysis.last.selected.profile": "pProject Default"
+    "project.structure.side.proportion": "0.0"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="a33f134b-fc96-427c-8751-fd48ab708dff" name="Changes" comment="" />
-      <created>1649927806687</created>
+      <changelist id="d3e13bdd-f1d4-409e-8ffe-efb7662ed6f1" name="Changes" comment="" />
+      <created>1650008737560</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1649927806687</updated>
+      <updated>1650008737560</updated>
     </task>
-    <task id="LOCAL-00001" summary="phase 1 started">
-      <created>1649928078769</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1649928078769</updated>
-    </task>
-    <task id="LOCAL-00002" summary="phase 1 started">
-      <created>1649928310037</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1649928310037</updated>
-    </task>
-    <task id="LOCAL-00003" summary="phase 1 started">
-      <created>1649928371724</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1649928371724</updated>
-    </task>
-    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -77,9 +54,5 @@
         </entry>
       </map>
     </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="phase 1 started" />
-    <option name="LAST_COMMIT_MESSAGE" value="phase 1 started" />
   </component>
 </project>
