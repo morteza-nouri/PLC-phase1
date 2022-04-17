@@ -2,26 +2,74 @@ grammar SimpleLoop;
 
 
 
-primaryExpression : IDENTIFIER | NUMBER | BOOL_VALUE | OPAR expression CPAR;
+primaryExpression
+    : IDENTIFIER
+    | NUMBER
+    | BOOL_VALUE
+    | setIncludeStatement
+    | OPAR expression CPAR
+    ;
+
 postfixUnaryExpression
     : primaryExpression
     (OBRACKET expression CBRACKET
     | DOT IDENTIFIER
-    | (INCREMENT | DECREMENT)
+    | op=(INCREMENT | DECREMENT) {System.out.println("Operator : " + $op.getText());}
     | OPAR argExpressionList? CPAR
     )*
     ;
-argExpressionList : assignmentExpression (COMMA assignmentExpression)*;
-unaryExpression : ((MINUS | NOT) unaryExpression) | postfixUnaryExpression;
-multiplicativeExpression : unaryExpression ((MULTIPLY | DIVIDE) unaryExpression)*;
-additiveExpression : multiplicativeExpression ((PLUS | MINUS) multiplicativeExpression)*;
-relationalExpression : additiveExpression ((GREATER_THAN | LESS_THAN) additiveExpression)*;
-equalityExpression : relationalExpression (EQUAL relationalExpression)*;
-andExpression : equalityExpression (AND equalityExpression)*;
-orExpression : andExpression (OR andExpression)*;
-conditionalExpression : orExpression (QUESTION expression COLON conditionalExpression)?;
-assignmentExpression : conditionalExpression | unaryExpression ASSIGN assignmentExpression;
-expression : assignmentExpression (COMMA assignmentExpression)*;
+argExpressionList
+    : assignmentExpression (COMMA assignmentExpression)*;
+unaryExpression
+    :
+    (op=(MINUS | NOT) unaryExpression {System.out.println("Operator : " + $op.getText());})
+    | postfixUnaryExpression
+    ;
+
+multiplicativeExpression
+    :
+    unaryExpression (op=(MULTIPLY | DIVIDE) unaryExpression {System.out.println("Operator : " + $op.getText());})*
+    ;
+
+additiveExpression
+    :
+    multiplicativeExpression (op=(PLUS | MINUS) multiplicativeExpression {System.out.println("Operator : " + $op.getText());})*
+    ;
+
+relationalExpression
+    :
+    additiveExpression (op=(GREATER_THAN | LESS_THAN) additiveExpression {System.out.println("Operator : " + $op.getText());})*
+    ;
+
+equalityExpression
+    :
+    relationalExpression (op=EQUAL relationalExpression {System.out.println("Operator : " + $op.getText());})*
+    ;
+
+andExpression
+    :
+    equalityExpression (op=AND equalityExpression {System.out.println("Operator : " + $op.getText());})*
+    ;
+
+orExpression
+    :
+    andExpression (op=OR andExpression {System.out.println("Operator : " + $op.getText());})*
+    ;
+
+conditionalExpression
+    :
+    orExpression (QUESTION expression COLON conditionalExpression {System.out.println("Operator : ?:");})?
+    ;
+
+assignmentExpression
+    :
+    conditionalExpression | unaryExpression op=ASSIGN assignmentExpression {System.out.println("Operator : " + $op.getText());}
+    ;
+
+expression
+    :
+    assignmentExpression (COMMA assignmentExpression)*
+    ;
 
 
 declaration : typeSpecifier IDENTIFIER(COMMA IDENTIFIER)*;
@@ -109,6 +157,7 @@ setAddStatement : (SELF DOT | ) IDENTIFIER DOT ADD OPAR expression CPAR;
 
 setDeleteStatement : (SELF DOT | ) IDENTIFIER DOT DELETE OPAR expression CPAR;
 
+setIncludeStatement : (SELF DOT | ) IDENTIFIER DOT INCLUDE OPAR expression CPAR;
 
 returnStatement : RETURN expression;
 
@@ -138,6 +187,7 @@ PRINT               : 'print';
 ADD                 : 'add';
 MERGE               : 'merge';
 DELETE              : 'delete';
+INCLUDE             : 'include';
 INITIALIZE          : 'initialize';
 
 // Control Structures
