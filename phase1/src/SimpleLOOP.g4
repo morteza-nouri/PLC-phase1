@@ -205,7 +205,7 @@ setMergeStatement : (SELF DOT | ) IDENTIFIER DOT MERGE {System.out.println("MERG
 
 setNewStatement : SET DOT NEW {System.out.println("NEW");} OPAR expression? CPAR;
 
-newObjectStatement : IDENTIFIER ASSIGN CLASS_IDENTIFIER DOT NEW OPAR expression (COMMA expression)* CPAR;
+newObjectStatement : IDENTIFIER ASSIGN CLASS_IDENTIFIER DOT NEW OPAR expression? (COMMA expression)* CPAR;
 
 memberAccessStatement : (SELF | IDENTIFIER) DOT IDENTIFIER;
 
