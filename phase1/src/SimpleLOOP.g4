@@ -2,7 +2,7 @@ grammar SimpleLOOP;
 
 simpleLOOP
     :
-    globalDeclarations* classDeclarations* main? classDeclarations* EOF
+    globalDeclarations* classDeclarations* main? classDeclarations* NEWLINE* EOF
     ;
 
 globalDeclarations : NEWLINE* declaration NEWLINE*;
@@ -76,7 +76,7 @@ conditionalExpression
 assignmentExpression
     : conditionalExpression
     | unaryExpression op=ASSIGN assignmentExpression {System.out.println("Operator : " + $op.getText());}
-    | ASSIGN assignmentExpression
+    | op=ASSIGN assignmentExpression {System.out.println("Operator : " + $op.getText());}
     ;
 
 expression
@@ -122,7 +122,11 @@ fptrType
     GREATER_THAN
     ;
 
-classDeclaration : CLASS CLASS_IDENTIFIER (LESS_THAN CLASS_IDENTIFIER)? classBody;
+classDeclaration
+    : CLASS base=CLASS_IDENTIFIER {System.out.println("ClassDec : " + $base.getText());}
+    (LESS_THAN derived=CLASS_IDENTIFIER {System.out.println("Inheritance : " + $base.getText() + " < " + $derived.getText());})?
+    classBody
+    ;
 
 
 classBody
@@ -134,7 +138,7 @@ classBody
 
 methodDeclaration
     :
-    (typeSpecifier | ) n=(IDENTIFIER | INITIALIZE) {System.out.println("MethodDec : " + $n.getText());}
+    (typeSpecifier | ) (n=IDENTIFIER {System.out.println("MethodDec : " + $n.getText());} | INITIALIZE)
     OPAR argDeclarator CPAR methodBody
     ;
 
@@ -146,10 +150,7 @@ argDeclarator
      |
     ;
 
-methodBody
-    : block
-    | NEWLINE statement NEWLINE*
-    ;
+methodBody : block;
 
 block
     : NEWLINE* OPEN_SCOPE NEWLINE* (statement NEWLINE*)* CLOSE_SCOPE NEWLINE*
@@ -157,8 +158,8 @@ block
     ;
 
 statement
-    : declaration
-    | memberAccessStatement
+    : methodCallStatement
+    | declaration
     | ifStatement
     | forStatement
     | printStatement
@@ -169,19 +170,20 @@ statement
     | setMergeStatement
     | setNewStatement
     | newObjectStatement
+    | memberAccessStatement
     | assignmentExpression
     ;
 
 ifStatement
-    : IF expression block?  elsifStatement* elseStatement?
+    : IF {System.out.println("Conditional : if");} expression block?  elsifStatement* elseStatement?
     ;
 
 elsifStatement
-    : ELSIF expression block? elseStatement?
+    : ELSIF {System.out.println("Conditional : elsif");} expression block? elseStatement?
     ;
 
 elseStatement
-    : ELSE block?
+    : ELSE {System.out.println("Conditional : else");} block?
     ;
 
 forStatement
@@ -206,6 +208,13 @@ setNewStatement : SET DOT NEW {System.out.println("NEW");} OPAR expression? CPAR
 newObjectStatement : IDENTIFIER ASSIGN CLASS_IDENTIFIER DOT NEW OPAR expression (COMMA expression)* CPAR;
 
 memberAccessStatement : (SELF | IDENTIFIER) DOT IDENTIFIER;
+
+methodCallStatement
+    :
+    (SELF | IDENTIFIER (OBRACKET expression CBRACKET)*) {System.out.println("MethodCall");}
+    (DOT (IDENTIFIER | INITIALIZE) (OBRACKET expression CBRACKET)*)+ OPAR (expression (COMMA expression)*)? CPAR
+    |   IDENTIFIER {System.out.println("MethodCall");} OPAR (expression (COMMA expression)*)? CPAR
+    ;
 
 returnStatement : RETURN {System.out.println("Return");} expression;
 
@@ -308,6 +317,6 @@ VBAR                : '|';
 NEWLINE             : '\n';
 WS                  : [ \r\t] -> skip;
 LINE_COMMENT        : '#' ~[\r\n]* -> skip;
-BLOCK_COMMENT       : '=begin\n'  .*? '=end' -> skip;
+BLOCK_COMMENT       : '=begin'  .*? '=end' -> skip;
 SEMICOLON           : ';' -> skip;
 DD                  :   '\\\\\n'-> skip;
