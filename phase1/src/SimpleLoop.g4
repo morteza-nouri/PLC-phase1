@@ -6,6 +6,8 @@ primaryExpression
     : IDENTIFIER
     | NUMBER
     | BOOL_VALUE
+    | memberAccessStatement
+    | setNewStatement
     | setIncludeStatement
     | OPAR expression CPAR
     ;
@@ -18,6 +20,7 @@ postfixUnaryExpression
     | OPAR argExpressionList? CPAR
     )*
     ;
+
 argExpressionList
     : assignmentExpression (COMMA assignmentExpression)*;
 unaryExpression
@@ -62,8 +65,9 @@ conditionalExpression
     ;
 
 assignmentExpression
-    :
-    conditionalExpression | unaryExpression op=ASSIGN assignmentExpression {System.out.println("Operator : " + $op.getText());}
+    : conditionalExpression
+    | unaryExpression op=ASSIGN assignmentExpression {System.out.println("Operator : " + $op.getText());}
+    | ASSIGN assignmentExpression
     ;
 
 expression
@@ -71,19 +75,23 @@ expression
     assignmentExpression (COMMA assignmentExpression)*
     ;
 
-
-declaration : typeSpecifier IDENTIFIER(COMMA IDENTIFIER)*;
+declaration
+    : typeSpecifier
+    n=IDENTIFIER {System.out.println("VarDec : " + $n.getText());}
+    (COMMA n=IDENTIFIER {System.out.println("VarDec : " + $n.getText());})*
+    | methodDeclaration
+    ;
 
 typeSpecifier
     : VOID
-    |primaryTypeSpecifier
+    | primaryTypeSpecifier
     | compoundTypeSpecifier
     ;
 
 primaryTypeSpecifier
     : INT
     | BOOL
-    | CLASS_NAME
+    | CLASS_IDENTIFIER
     ;
 
 compoundTypeSpecifier
@@ -105,61 +113,91 @@ fptrType
     GREATER_THAN
     ;
 
-classDeclaration : CLASS CLASS_NAME (LESS_THAN CLASS_NAME)? classBody;
+classDeclaration : CLASS CLASS_IDENTIFIER (LESS_THAN CLASS_IDENTIFIER)? classBody;
 
 
 classBody
-    : OPEN_SCOPE NEWLINE* ((PUBLIC | PRIVATE) statement NEWLINE*)* CLOSE_SCOPE
-    | NEWLINE+ (PUBLIC | PRIVATE) statement NEWLINE*
+    : NEWLINE* OPEN_SCOPE NEWLINE*
+    ((PUBLIC | PRIVATE) declaration NEWLINE*)*
+    CLOSE_SCOPE
+    | NEWLINE+ (PUBLIC | PRIVATE) declaration NEWLINE*
     ;
-
 
 methodDeclaration
     :
-    typeSpecifier (IDENTIFIER | INITIALIZE) OPAR argDeclarator CPAR methodBody
+    (typeSpecifier | ) n=(IDENTIFIER | INITIALIZE) {System.out.println("MethodDec : " + $n.getText());}
+    OPAR argDeclarator CPAR methodBody
     ;
 
 argDeclarator
     :
-     typeSpecifier IDENTIFIER (ASSIGN expression)? (COMMA typeSpecifier IDENTIFIER (ASSIGN expression)?)*
+     typeSpecifier n=IDENTIFIER  {System.out.println("ArgumentDec : " + $n.getText());}
+     (ASSIGN expression)?
+     (COMMA typeSpecifier IDENTIFIER {System.out.println("ArgumentDec : " + $n.getText());} (ASSIGN expression)?)*
     ;
 
 methodBody
-    :
+    : block
+    | NEWLINE statement NEWLINE*
     ;
 
 block
-    :
+    : NEWLINE* OPEN_SCOPE NEWLINE* (statement NEWLINE*)* CLOSE_SCOPE NEWLINE*
+    | NEWLINE statement NEWLINE*
     ;
 
 statement
     : declaration
+    | memberAccessStatement
     | ifStatement
     | forStatement
     | printStatement
     | returnStatement
+    | setAddStatement
+    | setDeleteStatement
+    | setIncludeStatement
+    | setMergeStatement
+    | setNewStatement
+    | newObjectStatement
+    | assignmentExpression
     ;
 
-ifStatement : IF expression NEWLINE+ (block NEWLINE*)?  elsifStatement* elseStatement?;
-elsifStatement : ELSIF expression NEWLINE+ (block NEWLINE*)? elseStatement?;
-elseStatement : ELSE NEWLINE+ (block NEWLINE*)?;
+ifStatement
+    : IF expression block?  elsifStatement* elseStatement?
+    ;
+
+elsifStatement
+    : ELSIF expression block? elseStatement?
+    ;
+
+elseStatement
+    : ELSE block?
+    ;
 
 forStatement
     :
-    (OPAR expression DOT DOT expression CPAR DOT EACH DO VBAR IDENTIFIER VBAR
-    | IDENTIFIER DOT EACH DO VBAR IDENTIFIER VBAR
-    ) NEWLINE+ block
+    (OPAR expression DOT DOT expression CPAR DOT EACH DO {System.out.println("Loop : each");} VBAR IDENTIFIER VBAR
+    | (SELF DOT IDENTIFIER | IDENTIFIER) DOT EACH DO {System.out.println("Loop : each");} VBAR IDENTIFIER VBAR
+    ) block
     ;
 
-printStatement : PRINT OPAR expression CPAR;
+printStatement : PRINT {System.out.println("Built-in : print");} OPAR expression CPAR;
 
-setAddStatement : (SELF DOT | ) IDENTIFIER DOT ADD OPAR expression CPAR;
+setAddStatement : (SELF DOT | ) IDENTIFIER DOT ADD {System.out.println("ADD");} OPAR expression CPAR;
 
-setDeleteStatement : (SELF DOT | ) IDENTIFIER DOT DELETE OPAR expression CPAR;
+setDeleteStatement : (SELF DOT | ) IDENTIFIER DOT DELETE {System.out.println("DELETE");} OPAR expression CPAR;
 
-setIncludeStatement : (SELF DOT | ) IDENTIFIER DOT INCLUDE OPAR expression CPAR;
+setIncludeStatement : (SELF DOT | ) IDENTIFIER DOT INCLUDE {System.out.println("INCLUDE");} OPAR expression CPAR;
 
-returnStatement : RETURN expression;
+setMergeStatement : (SELF DOT | ) IDENTIFIER DOT MERGE {System.out.println("MERGE");} OPAR SET DOT NEW OPAR ( IDENTIFIER | expression) CPAR CPAR;
+
+setNewStatement : SET DOT NEW {System.out.println("NEW");} OPAR expression? CPAR;
+
+newObjectStatement : IDENTIFIER ASSIGN CLASS_IDENTIFIER DOT NEW OPAR expression (COMMA expression)* CPAR;
+
+memberAccessStatement : (SELF | IDENTIFIER) DOT IDENTIFIER;
+
+returnStatement : RETURN {System.out.println("Return");} expression;
 
 
 
@@ -169,7 +207,6 @@ CLOSE_SCOPE         : '}';
 
 // CLASS
 CLASS               : 'class';
-CLASS_NAME          : [A-Z][a-zA-Z0-9_]*;
 SELF                : 'self';
 
 // Primitives values
@@ -184,6 +221,7 @@ SET                 : 'Set';
 
 // Built-in
 PRINT               : 'print';
+NEW                 : 'new';
 ADD                 : 'add';
 MERGE               : 'merge';
 DELETE              : 'delete';
@@ -209,11 +247,11 @@ RETURN              : 'return';
 
 // Identifier
 IDENTIFIER          : (LOWERCASE | UNDERLINE)(LETTER | UNDERLINE | DIGIT)*;
+CLASS_IDENTIFIER    : [A-Z][a-zA-Z0-9_]*;
 
 // Values
 TRUE                : 'true';
 FALSE               : 'false';
-ZERO                : '0';
 NUMBER              : DIGIT+;
 DIGIT               : [0-9];
 LETTER              : UPPERCASE | LOWERCASE;
