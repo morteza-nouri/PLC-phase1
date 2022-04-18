@@ -1,6 +1,15 @@
-grammar SimpleLoop;
+grammar SimpleLOOP;
 
+simpleLOOP
+    :
+    globalDeclarations* classDeclarations* main? classDeclarations* EOF
+    ;
 
+globalDeclarations : NEWLINE* declaration NEWLINE*;
+
+classDeclarations : NEWLINE* classDeclaration NEWLINE*;
+
+main : CLASS MAIN {System.out.println("ClassDec : Main");} classBody;
 
 primaryExpression
     : IDENTIFIER
@@ -133,7 +142,8 @@ argDeclarator
     :
      typeSpecifier n=IDENTIFIER  {System.out.println("ArgumentDec : " + $n.getText());}
      (ASSIGN expression)?
-     (COMMA typeSpecifier IDENTIFIER {System.out.println("ArgumentDec : " + $n.getText());} (ASSIGN expression)?)*
+     (COMMA typeSpecifier n=IDENTIFIER {System.out.println("ArgumentDec : " + $n.getText());} (ASSIGN expression)?)*
+     |
     ;
 
 methodBody
@@ -206,6 +216,7 @@ OPEN_SCOPE          : '{';
 CLOSE_SCOPE         : '}';
 
 // CLASS
+MAIN                : 'Main';
 CLASS               : 'class';
 SELF                : 'self';
 
@@ -299,3 +310,4 @@ WS                  : [ \r\t] -> skip;
 LINE_COMMENT        : '#' ~[\r\n]* -> skip;
 BLOCK_COMMENT       : '=begin\n'  .*? '=end' -> skip;
 SEMICOLON           : ';' -> skip;
+DD                  :   '\\\\\n'-> skip;
