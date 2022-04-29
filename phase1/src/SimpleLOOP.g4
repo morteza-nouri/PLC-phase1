@@ -19,6 +19,7 @@ primaryExpression
     | setNewStatement
     | setIncludeStatement
     | OPAR expression CPAR
+    | OPAR expression ASSIGN expression CPAR
     ;
 
 postfixUnaryExpression
@@ -224,7 +225,15 @@ returnStatement : RETURN {System.out.println("Return");} expression;
 OPEN_SCOPE          : '{';
 CLOSE_SCOPE         : '}';
 
+// Primitives
+VOID                : 'void';
+INT                 : 'int';
+BOOL                : 'bool';
+FPTR                : 'fptr';
+SET                 : 'Set';
+
 // CLASS
+CLASS_IDENTIFIER    : [A-Z][a-zA-Z0-9_]*;
 MAIN                : 'Main';
 CLASS               : 'class';
 SELF                : 'self';
@@ -232,12 +241,6 @@ SELF                : 'self';
 // Primitives values
 BOOL_VALUE          : TRUE | FALSE;
 
-// Primitives
-VOID                : 'void';
-INT                 : 'int';
-BOOL                : 'bool';
-FPTR                : 'fptr';
-SET                 : 'Set';
 
 // Built-in
 PRINT               : 'print';
@@ -267,7 +270,6 @@ RETURN              : 'return';
 
 // Identifier
 IDENTIFIER          : (LOWERCASE | UNDERLINE)(LETTER | UNDERLINE | DIGIT)*;
-CLASS_IDENTIFIER    : [A-Z][a-zA-Z0-9_]*;
 
 // Values
 TRUE                : 'true';
