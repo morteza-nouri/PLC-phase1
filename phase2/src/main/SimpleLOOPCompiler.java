@@ -74,10 +74,12 @@
 
 package main;
 
+import main.visitor.name.ASTTreePrinter;
 import parsers.*;
 import main.ast.nodes.Program;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+
 
 public class SimpleLOOPCompiler {
     public void compile(CharStream textStream) {
@@ -88,5 +90,7 @@ public class SimpleLOOPCompiler {
         Program program = simpleLOOPParser.simpleLOOP().simpleLOOPProgram;
 
         //todo
+        ASTTreePrinter astTreePrinter = new ASTTreePrinter();
+        astTreePrinter.visit(program);
     }
 }
