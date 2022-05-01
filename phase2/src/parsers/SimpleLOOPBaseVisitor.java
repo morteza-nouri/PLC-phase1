@@ -1,9 +1,10 @@
-// Generated from E:/UT/S6/TA/Compiler/SimpleLOOP-Compiler/src/main/grammar\SimpleLOOP.g4 by ANTLR 4.9.2
+// Generated from C:/Users/Morteza Nouri/IdeaProjects/Compiler/phase2/src/main/grammar\SimpleLOOP.g4 by ANTLR 4.9.3
 package parsers;
 
      import main.ast.nodes.*;
      import main.ast.nodes.declaration.*;
      import main.ast.nodes.declaration.classDec.*;
+     import main.ast.nodes.declaration.classDec.classMembersDec.*;
      import main.ast.nodes.declaration.variableDec.*;
      import main.ast.nodes.expression.*;
      import main.ast.nodes.expression.operators.*;
@@ -63,7 +64,7 @@ public class SimpleLOOPBaseVisitor<T> extends AbstractParseTreeVisitor<T> implem
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitField_decleration(SimpleLOOPParser.Field_declerationContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDecleration(SimpleLOOPParser.DeclerationContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -301,21 +302,7 @@ public class SimpleLOOPBaseVisitor<T> extends AbstractParseTreeVisitor<T> implem
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitAccessByIndex(SimpleLOOPParser.AccessByIndexContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public T visitSetNew(SimpleLOOPParser.SetNewContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitSetInclude(SimpleLOOPParser.SetIncludeContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

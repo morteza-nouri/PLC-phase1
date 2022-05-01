@@ -1,9 +1,10 @@
-// Generated from E:/UT/S6/TA/Compiler/SimpleLOOP-Compiler/src/main/grammar\SimpleLOOP.g4 by ANTLR 4.9.2
+// Generated from C:/Users/Morteza Nouri/IdeaProjects/Compiler/phase2/src/main/grammar\SimpleLOOP.g4 by ANTLR 4.9.3
 package parsers;
 
      import main.ast.nodes.*;
      import main.ast.nodes.declaration.*;
      import main.ast.nodes.declaration.classDec.*;
+     import main.ast.nodes.declaration.classDec.classMembersDec.*;
      import main.ast.nodes.declaration.variableDec.*;
      import main.ast.nodes.expression.*;
      import main.ast.nodes.expression.operators.*;
@@ -82,13 +83,13 @@ public class SimpleLOOPBaseListener implements SimpleLOOPListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterField_decleration(SimpleLOOPParser.Field_declerationContext ctx) { }
+	@Override public void enterDecleration(SimpleLOOPParser.DeclerationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitField_decleration(SimpleLOOPParser.Field_declerationContext ctx) { }
+	@Override public void exitDecleration(SimpleLOOPParser.DeclerationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -490,18 +491,6 @@ public class SimpleLOOPBaseListener implements SimpleLOOPListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAccessByIndex(SimpleLOOPParser.AccessByIndexContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAccessByIndex(SimpleLOOPParser.AccessByIndexContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterSetNew(SimpleLOOPParser.SetNewContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -509,18 +498,6 @@ public class SimpleLOOPBaseListener implements SimpleLOOPListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSetNew(SimpleLOOPParser.SetNewContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterSetInclude(SimpleLOOPParser.SetIncludeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSetInclude(SimpleLOOPParser.SetIncludeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

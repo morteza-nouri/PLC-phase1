@@ -239,10 +239,10 @@ public class ASTTreePrinter extends Visitor<Void> {
     }
 
     @Override
-    public Void visit(SetInclude setAdd) {
-        messagePrinter(setAdd.getLine(), setAdd.toString());
-        setAdd.getSetArg().accept(this);
-        setAdd.getElementArg().accept(this);
+    public Void visit(SetInclude setInclude) {
+        messagePrinter(setInclude.getLine(), setInclude.toString());
+        setInclude.getSetArg().accept(this);
+        setInclude.getElementArg().accept(this);
         return null;
     }
 

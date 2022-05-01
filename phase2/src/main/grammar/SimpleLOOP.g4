@@ -4,6 +4,7 @@ grammar SimpleLOOP;
      import main.ast.nodes.*;
      import main.ast.nodes.declaration.*;
      import main.ast.nodes.declaration.classDec.*;
+     import main.ast.nodes.declaration.classDec.classMembersDec.*;
      import main.ast.nodes.declaration.variableDec.*;
      import main.ast.nodes.expression.*;
      import main.ast.nodes.expression.operators.*;
@@ -72,12 +73,14 @@ classDeclaration returns [ClassDeclaration classDeclarationRet]
     (LBRACE NEWLINE+
     (d1=decleration
     {
-        if ($d1.declarationRet instanceof ConstructorDeclaration)
-            $classDeclarationRet.setConstructor($d1.declarationRet);
-        if ($d1.declarationRet instanceof  FieldDeclaration)
-            $classDeclarationRet.addField($d1.declarationRet);
-        if ($d1.declarationRet instanceof MethodDeclaration)
-            $classDeclarationRet.addMethod($d1.declarationRet);
+        for (Declaration dec : $d1.declarationRet) {
+            if (dec instanceof ConstructorDeclaration)
+                $classDeclarationRet.setConstructor((ConstructorDeclaration)dec);
+            if (dec instanceof  FieldDeclaration)
+                $classDeclarationRet.addField((FieldDeclaration)dec);
+            if (dec instanceof MethodDeclaration)
+                $classDeclarationRet.addMethod((MethodDeclaration)dec);
+        }
     }
     NEWLINE+)+
     RBRACE
@@ -87,11 +90,11 @@ classDeclaration returns [ClassDeclaration classDeclarationRet]
     {
         for (Declaration dec : $d2.declarationRet) {
             if (dec instanceof ConstructorDeclaration)
-                $classDeclarationRet.setConstructor(dec);
+                $classDeclarationRet.setConstructor((ConstructorDeclaration)dec);
             if (dec instanceof  FieldDeclaration)
-                $classDeclarationRet.addField(dec);
+                $classDeclarationRet.addField((FieldDeclaration)dec);
             if (dec instanceof MethodDeclaration)
-                $classDeclarationRet.addMethod(dec);
+                $classDeclarationRet.addMethod((MethodDeclaration)dec);
         }
     }
     )
@@ -99,7 +102,7 @@ classDeclaration returns [ClassDeclaration classDeclarationRet]
 
 decleration returns [ArrayList<Declaration> declarationRet] locals [boolean isPrivate]
     :
-    ((( (PUBLIC {$isPrivate = false} | PRIVATE {$isPrivate = true} )
+    ((( (PUBLIC {$isPrivate = false;} | PRIVATE {$isPrivate = true;} )
     (v=varDecStatement
     {
         for (VariableDeclaration varDec: $v.varDecStmtRet)
@@ -119,7 +122,7 @@ decleration returns [ArrayList<Declaration> declarationRet] locals [boolean isPr
 
 method returns [MethodDeclaration methodRet] locals [Type returnType]
     :
-    ( t=type {$returnType = $t.typeRet} | VOID {$returnType = new NullType();} )
+    ( t=type {$returnType = $t.typeRet;} | VOID {$returnType = new NullType();} )
     id=identifier
     {
         $methodRet = new MethodDeclaration();
@@ -127,7 +130,7 @@ method returns [MethodDeclaration methodRet] locals [Type returnType]
         $methodRet.setReturnType($returnType);
         $methodRet.setLine($id.identifierRet.getLine());
     }
-     args=methodArgsDec {$methodRet.setArgs($args.methodArgsDecRet)} NEWLINE*
+     args=methodArgsDec {$methodRet.setArgs($args.methodArgsDecRet);} NEWLINE*
      b=methodBody
      {
         $methodRet.setLocalVars($b.localVars);
@@ -173,7 +176,7 @@ argDec returns [VariableDeclaration argDecRet]
     :
     t=type i=identifier
     {
-        $argDecRet = new VariableDeclaration($t.typeRet, $i.identifierRet);
+        $argDecRet = new VariableDeclaration($i.identifierRet, $t.typeRet);
         $argDecRet.setLine($i.identifierRet.getLine());
     }
     ;
@@ -207,7 +210,7 @@ blockStatement returns [BlockStmt blockStmtRet]
 
 singleStatement returns [Statement singleStmtRet]
     :
-    if=ifStatement {$singleStmtRet = $if.ifStmtRet;}
+    if_=ifStatement {$singleStmtRet = $if_.ifStmtRet;}
     | print=printStatement {$singleStmtRet = $print.printStmtRet;}
     | mcs=methodCallStmt {$singleStmtRet = $mcs.methodCallStmtRet;}
     | ret=returnStatement {$singleStmtRet = $ret.returnStmtRet;}
@@ -252,15 +255,15 @@ varDecStatement returns [ArrayList<VariableDeclaration> varDecStmtRet]
     { $varDecStmtRet = new ArrayList<>(); }
     t=type id1=identifier
     {
-        ٰVariableDeclaration newVarDec = new ٰVariableDeclaration($id1.identifierRet, $t.typeRet);
-        newVarDec.setLine($id1.identifierRet.getLine());
-        $varDecStmtRet.add(newVarDec);
+        VariableDeclaration newVar1 = new VariableDeclaration($id1.identifierRet, $t.typeRet);
+        newVar1.setLine($id1.identifierRet.getLine());
+        $varDecStmtRet.add(newVar1);
     }
     (COMMA id2=identifier
     {
-        VariableDeclaration newVarDec = new ٰVariableDeclaration($id2.identifierRet, $t.typeRet);
-        newVarDec.setLine($id2.identifierRet.getLine());
-        $varDecStmtRet.add(newVarDec);
+        VariableDeclaration newVar2 = new VariableDeclaration($id2.identifierRet, $t.typeRet);
+        newVar2.setLine($id2.identifierRet.getLine());
+        $varDecStmtRet.add(newVar2);
     }
     )*
     ;
@@ -273,7 +276,7 @@ ifStatement returns [ConditionalStmt ifStmtRet]
         $ifStmtRet.setLine($i.getLine());
     }
     (elif=elsifStatement { $ifStmtRet.addElsif($elif.elsifStmtRet); } )*
-    (else=elseStatement { $ifStmtRet.setElseBody($else.elseStmtRet); } )?
+    (else_=elseStatement { $ifStmtRet.setElseBody($else_.elseStmtRet); } )?
     ;
 
 elsifStatement returns [ElsifStmt elsifStmtRet]
@@ -287,8 +290,8 @@ elsifStatement returns [ElsifStmt elsifStmtRet]
 
 condition returns [Expression conditionRet]
     :
-    (LPAR e1=expression { $conditionRet =  $e1.expressionRet} RPAR)
-    | (e2=expression { $conditionRet = $e2.expressionRet } )
+    (LPAR e1=expression { $conditionRet =  $e1.expressionRet; } RPAR)
+    | (e2=expression { $conditionRet = $e2.expressionRet; } )
     ;
 
 elseStatement returns [Statement elseStmtRet]
@@ -309,7 +312,7 @@ printStatement returns [PrintStmt printStmtRet]
 //todo
 methodCallStmt returns [MethodCallStmt methodCallStmtRet] locals [Expression inst, MethodCall mc]
     :
-    a=accessExpression {$inst = $.accessExprRet;}
+    a=accessExpression {$inst = $a.accessExprRet;}
     (DOT (init=INITIALIZE {$inst = new Identifier($init.text);}
     | i=identifier {$inst = $i.identifierRet;} )
     )*
@@ -355,7 +358,7 @@ loopStatement returns [EachStmt loopStmtRet] locals [Expression list]
     ))
     DOT each=EACH DO BAR i=identifier BAR
     {
-        $loopStmtRet = new EachStmt($i.identifierRet, $list.expressionRet);
+        $loopStmtRet = new EachStmt($i.identifierRet, $list);
         $loopStmtRet.setLine($each.getLine());
     }
     b=body { $loopStmtRet.setBody($b.bodyRet); }
@@ -366,9 +369,8 @@ expression returns [Expression expressionRet]
     te=ternaryExpression { $expressionRet = $te.ternaryExprRet; }
     (a=ASSIGN e=expression
     {
-        BinaryOperator op = BinaryOperator.assign;
-        $expressionRet = new BinaryExpression($expressionRet, $e.expressionRet, op);
-        $expressionRet.setLine(op.getLine());
+        $expressionRet = new BinaryExpression($expressionRet, $e.expressionRet, BinaryOperator.assign);
+        $expressionRet.setLine($a.getLine());
     }
     )?
     (DOT inc=INCLUDE LPAR oe=orExpression RPAR
@@ -391,7 +393,7 @@ ternaryExpression returns [Expression ternaryExprRet]
 
 orExpression returns [Expression orExprRet]
     :
-    e1=andExpression { $orExprRet = $e1.andExprRet }
+    e1=andExpression { $orExprRet = $e1.andExprRet; }
     (o=OR e2=andExpression
     {
         BinaryOperator op = BinaryOperator.or;
@@ -540,7 +542,7 @@ accessExpression returns [Expression accessExprRet]
 otherExpression returns [Expression otherExprRet]
     :
     s=SELF {$otherExprRet = new SelfClass(); $otherExprRet.setLine($s.getLine());}
-    | c=class_identifier { $otherExprRet = $c.classIdentifierRet; }
+    | c=class_identifier { $otherExprRet = $c.classIdentifierRet.getClassName(); }
     | v=value { $otherExprRet = $v.valueRet;}
     | id=identifier { $otherExprRet = $id.identifierRet; }
     | sn=setNew { $otherExprRet = $sn.setNewRet; }
@@ -550,12 +552,10 @@ otherExpression returns [Expression otherExprRet]
 
 setNew returns [SetNew setNewRet]
     :
-    {
-        $setNewRet = new SetNew();
-        ArrayList<Expression> args = new ArrayList<>();
-    }
-    SET DOT NEW LPAR (LPAR o1=orExpression { args.add($o1.orExprRet) }
-    (COMMA o2=orExpression { args.add($o2.orExprRet) } )* RPAR)?  RPAR
+    { ArrayList<Expression> args = new ArrayList<>();}
+    SET DOT NEW LPAR (LPAR o1=orExpression { args.add($o1.orExprRet); }
+    (COMMA o2=orExpression { args.add($o2.orExprRet); } )* RPAR)?  RPAR
+    { $setNewRet = new SetNew(args); }
     ;
 
 value returns [Value valueRet]
@@ -587,7 +587,7 @@ boolValue returns [BoolValue boolValueRet]
 class_identifier returns [ClassType classIdentifierRet]
     :
     id=CLASS_IDENTIFIER
-    { $classIdentifierRet = new ClassType($id.text); }
+    { $classIdentifierRet = new ClassType(new Identifier($id.text)); }
     ;
 
 identifier returns [Identifier identifierRet, int line]
@@ -610,15 +610,15 @@ type returns [Type typeRet]
     | c=class_identifier { $typeRet = $c.classIdentifierRet; }
     ;
 
-array_type returns [ArrayType arrayTypeRet]
+array_type returns [ArrayType arrayTypeRet] locals [Type arrType]
     :
-    { $arrayTypeRet = new ArrayType(); }
-    (INT { $arrayTypeRet.setType(new IntType()); }
-    | BOOL { $arrayTypeRet.setType(new BoolType()); }
-    | c=class_identifier { $arrayTypeRet.setType(c.classIdentifierRet); }
+    (INT { $arrType = new IntType(); }
+    | BOOL { $arrType = new BoolType(); }
+    | c=class_identifier { $arrType = $c.classIdentifierRet; }
     )
-    { demensions = new ArrayList<Integer>(); }
-    (LBRACK e=expression RBRACK { demensions.add($e.expressionRet); })+
+    { ArrayList<Expression> dim = new ArrayList<>(); }
+    (LBRACK e=expression RBRACK { dim.add($e.expressionRet); })+
+    { $arrayTypeRet = new ArrayType($arrType, dim); }
     ;
 
 fptr_type returns [FptrType fptrTypeRet]
