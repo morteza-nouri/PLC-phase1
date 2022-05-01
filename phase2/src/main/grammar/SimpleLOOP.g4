@@ -1,232 +1,607 @@
 grammar SimpleLOOP;
 
-//@header{
-//     import main.ast.nodes.*;
-//     import main.ast.nodes.declaration.*;
-//     import main.ast.nodes.declaration.classDec.*;
-//     import main.ast.nodes.declaration.variableDec.*;
-//     import main.ast.nodes.expression.*;
-//     import main.ast.nodes.expression.operators.*;
-//     import main.ast.nodes.expression.values.*;
-//     import main.ast.nodes.expression.values.primitive.*;
-//     import main.ast.nodes.statement.*;
-//     import main.ast.nodes.statement.set.*;
-//     import main.ast.types.*;
-//     import main.ast.types.primitives.*;
-//     import main.ast.types.set.*;
-//     import main.ast.types.functionPointer.*;
-//     import main.ast.types.array.*;
-//     import java.util.*;
-// }
+@header{
+     import main.ast.nodes.*;
+     import main.ast.nodes.declaration.*;
+     import main.ast.nodes.declaration.classDec.*;
+     import main.ast.nodes.declaration.variableDec.*;
+     import main.ast.nodes.expression.*;
+     import main.ast.nodes.expression.operators.*;
+     import main.ast.nodes.expression.values.*;
+     import main.ast.nodes.expression.values.primitive.*;
+     import main.ast.nodes.statement.*;
+     import main.ast.nodes.statement.set.*;
+     import main.ast.types.*;
+     import main.ast.types.primitives.*;
+     import main.ast.types.set.*;
+     import main.ast.types.functionPointer.*;
+     import main.ast.types.array.*;
+     import java.util.*;
+ }
 
-simpleLOOP //returns [Program simpleLOOPProgram]
+simpleLOOP returns [Program simpleLOOPProgram]
     :
-    NEWLINE* p = program /*{$simpleLOOPProgram = $p.programRet;}*/ NEWLINE* EOF;
+    NEWLINE* p = program {$simpleLOOPProgram = $p.programRet;} NEWLINE* EOF
+    ;
 
-program //returns[Program programRet]
-     :
-    /*{$programRet = new Program();
-     int line = 1;
-     $programRet.setLine(line);}*/
-    (v = varDecStatement NEWLINE+ /*{$programRet.addGlobalVariable($v.variableDeclarationRet);}*/)*
-    (c = classDeclaration NEWLINE+ /*{$programRet.addClass($c.classDeclarationRet);}*/)*;
+program returns [Program programRet]
+    :
+    {
+        $programRet = new Program();
+        int line = 1;
+        $programRet.setLine(line);
+    }
+    (v = varDecStatement NEWLINE+
+        {
+            for (VariableDeclaration varDec: $v.varDecStmtRet)
+                $programRet.addGlobalVariable(varDec);
+        }
+    )*
+    (c = classDeclaration NEWLINE+ {$programRet.addClass($c.classDeclarationRet);})*
+    ;
+
+constructor returns [ConstructorDeclaration constructorDecRet]
+    :
+    PUBLIC init = INITIALIZE
+    {
+        $constructorDecRet = new ConstructorDeclaration();
+        $constructorDecRet.setMethodName(new Identifier($init.text));
+        $constructorDecRet.setPrivate(false);
+        $constructorDecRet.setLine($init.getLine());
+    }
+    args=methodArgsDec { $constructorDecRet.setArgs($args.methodArgsDecRet); } NEWLINE*
+    b=methodBody
+    {
+        $constructorDecRet.setLocalVars($b.localVars);
+        $constructorDecRet.setBody($b.statements);
+    }
+    ;
+
+
+classDeclaration returns [ClassDeclaration classDeclarationRet]
+    :
+    c=CLASS cid1=class_identifier
+    {
+        $classDeclarationRet  = new ClassDeclaration($cid1.classIdentifierRet.getClassName());
+        $classDeclarationRet.setLine($c.getLine());
+    }
+    (LESS_THAN cid2=class_identifier
+    { $classDeclarationRet.setParentClassName($cid2.classIdentifierRet.getClassName()); }
+    )?
+    NEWLINE*
+    (
+    (LBRACE NEWLINE+
+    (d1=decleration
+    {
+        if ($d1.declarationRet instanceof ConstructorDeclaration)
+            $classDeclarationRet.setConstructor($d1.declarationRet);
+        if ($d1.declarationRet instanceof  FieldDeclaration)
+            $classDeclarationRet.addField($d1.declarationRet);
+        if ($d1.declarationRet instanceof MethodDeclaration)
+            $classDeclarationRet.addMethod($d1.declarationRet);
+    }
+    NEWLINE+)+
+    RBRACE
+    )
+    |
+    (d2=decleration)
+    {
+        for (Declaration dec : $d2.declarationRet) {
+            if (dec instanceof ConstructorDeclaration)
+                $classDeclarationRet.setConstructor(dec);
+            if (dec instanceof  FieldDeclaration)
+                $classDeclarationRet.addField(dec);
+            if (dec instanceof MethodDeclaration)
+                $classDeclarationRet.addMethod(dec);
+        }
+    }
+    )
+    ;
+
+decleration returns [ArrayList<Declaration> declarationRet] locals [boolean isPrivate]
+    :
+    ((( (PUBLIC {$isPrivate = false} | PRIVATE {$isPrivate = true} )
+    (v=varDecStatement
+    {
+        for (VariableDeclaration varDec: $v.varDecStmtRet)
+            $declarationRet.add( new FieldDeclaration(varDec, $isPrivate) );
+    }
+    |
+    m=method
+    {
+        $m.methodRet.setPrivate($isPrivate);
+        $declarationRet.add($m.methodRet);
+    }
+    ))
+    |
+    c=constructor { $declarationRet.add($c.constructorDecRet); })
+    )
+    ;
+
+method returns [MethodDeclaration methodRet] locals [Type returnType]
+    :
+    ( t=type {$returnType = $t.typeRet} | VOID {$returnType = new NullType();} )
+    id=identifier
+    {
+        $methodRet = new MethodDeclaration();
+        $methodRet.setMethodName($id.identifierRet);
+        $methodRet.setReturnType($returnType);
+        $methodRet.setLine($id.getLine());
+    }
+     args=methodArgsDec {$methodRet.setArgs($args.methodArgsDecRet)} NEWLINE*
+     b=methodBody
+     {
+        $methodRet.setLocalVars($b.localVars);
+        $methodRet.setBody($b.statements);
+     }
+    ;
+
+methodBody returns [ArrayList<VariableDeclaration> localVars, ArrayList<Statement> statements]
+    :
+    {
+        $localVars = new ArrayList<>();
+        $statements = new ArrayList<>();
+    }
+    (LBRACE NEWLINE+ (v1=varDecStatement
+    {
+        for (VariableDeclaration varDec: $v1.varDecStmtRet)
+            $localVars.add(varDec);
+    }
+    NEWLINE+)*
+    (s1=singleStatement { $statements.add($s1.singleStmtRet); }
+    NEWLINE+)* RBRACE)
+    |
+    ((v2=varDecStatement)
+    {
+        for (VariableDeclaration varDec: $v2.varDecStmtRet)
+            $localVars.add(varDec);
+    }
+    |
+    (s2=singleStatement) { $statements.add($s2.singleStmtRet); }
+    )
+    ;
+
+methodArgsDec returns [ArrayList<VariableDeclaration> methodArgsDecRet]
+    :
+    { $methodArgsDecRet = new ArrayList<>(); }
+    LPAR (arg1=argDec { $methodArgsDecRet.add($arg1.argDecRet); } ((ASSIGN orExpression)
+    | (COMMA arg2=argDec  { $methodArgsDecRet.add($arg2.argDecRet); })*)
+    (COMMA arg3=argDec { $methodArgsDecRet.add($arg3.argDecRet); }
+    ASSIGN orExpression)*)? RPAR
+    ;
+
+argDec returns [VariableDeclaration argDecRet]
+    :
+    t=type i=identifier
+    {
+        $argDecRet = new VariableDeclaration($t.typeRet, $i.identifierRet);
+        $argDecRet.setLine($i.getLine());
+    }
+    ;
+
+methodArgs returns [ArrayList<Expression> methodArgsRet]
+    :
+    { $methodArgsRet = new ArrayList<>(); }
+    (e1=expression { $mehodArgsRet.add($e1.expressionRet); }
+    (COMMA e2=expression { $methodArgsRet.add($e2.expressionRet); } )*
+    )?
+    ;
+
+body returns [Statement bodyRet]
+    :
+     (b=blockStatement { $bodyRet = $b.blockStmtRet; }
+     |
+     (NEWLINE+ s=singleStatement { $bodyRet = $s.singleStmtRet; })
+     )
+     ;
+
+blockStatement returns [BlockStmt blockStmtRet]
+    :
+    { $blockStmtRet = new BlockStmt(); }
+    lb=LBRACE NEWLINE+ (s=singleStatement
+    {
+        $blockStmtRet.setLine($lb.getLine());
+        $blockStmtRet.addStatement($s.singleStmtRet);
+    }
+    NEWLINE+)* RBRACE
+    ;
 
 //todo
-constructor
-    : PUBLIC INITIALIZE methodArgsDec methodBody;
+singleStatement returns [Statement singleStmtRet]
+    :
+    ifStatement
+    | printStatement
+    | methodCallStmt
+    | returnStatement
+    | assignmentStatement
+    | loopStatement
+    | addStatement
+    | mergeStatement
+    | deleteStatement
+    ;
 
 //todo
-classDeclaration
-    : CLASS class_identifier (LESS_THAN class_identifier)?
-    NEWLINE* ((LBRACE NEWLINE+ field_decleration+ RBRACE) | (field_decleration)) NEWLINE*;
+addStatement
+    :
+    expression DOT ADD LPAR orExpression RPAR
+    ;
 
 //todo
-field_decleration
-    : (((PUBLIC | PRIVATE) (varDecStatement | method)) | constructor) NEWLINE+;
+mergeStatement
+    :
+    expression DOT MERGE LPAR orExpression
+    (COMMA orExpression)* RPAR
+    ;
 
 //todo
-method
-    : (type | VOID) identifier methodArgsDec NEWLINE* methodBody;
+deleteStatement
+    :
+    expression DOT DELETE LPAR orExpression RPAR
+    ;
+
+varDecStatement returns [ArrayList<VariableDeclaration> varDecStmtRet]
+    :
+    { $varDecStmtRet = new ArrayList<>(); }
+    t=type id1=identifier
+    {
+        ٰVariableDeclaration newVarDec = new ٰVariableDeclaration($id1.identifierRet, $t.typeRet);
+        newVarDec.setLine($id1.getLine());
+        $varDecStmtRet.add(newVarDec);
+    }
+    (COMMA id2=identifier
+    {
+        VariableDeclaration newVarDec = new ٰVariableDeclaration($id2.identifierRet, $t.typeRet);
+        newVarDec.setLine($id2.getLine());
+        $varDecStmtRet.add(newVarDec);
+    }
+    )*
+    ;
+
+ifStatement returns [ConditionalStmt ifStmtRet]
+    :
+    i=IF e=condition b=body
+    {
+        $ifStmtRet = new ConditionalStmt($e.expressionRet, $b.bodyRet);
+        $ifStmtRet.setLine($i.getLine());
+    }
+    (elif=elsifStatement { $ifStmtRet.addElsif($elif.elsifStmtRet); } )*
+    (else=elseStatement { $ifStmtRet.setElseBody($else.elseStmtRet); } )?
+    ;
+
+elsifStatement returns [Statement elsifStmtRet]
+    :
+     NEWLINE* ELSIF condition body
+     ;
 
 //todo
-methodBody
-    : (LBRACE NEWLINE+ (varDecStatement NEWLINE+)* (singleStatement NEWLINE+)* RBRACE)
-    | ((varDecStatement NEWLINE+) | (singleStatement NEWLINE+));
+condition
+    :
+    (LPAR expression RPAR) | (expression);
+
+
+elseStatement returns [Statement elseStmtRet]
+    :
+    NEWLINE* ELSE body;
+
+printStatement returns [Statement printStmteRet]
+    :
+    p=PRINT LPAR e=expression
+    {
+        $printStmtRet = new PrintStmt($e.expressionRet);
+        $printStmtRet.setLine($p.getLine());
+    }
+    RPAR
+    ;
 
 //todo
-methodArgsDec
-    : LPAR (argDec ((ASSIGN orExpression) | (COMMA argDec)*) (COMMA argDec ASSIGN orExpression)*)?  RPAR ;
+methodCallStmt
+    :
+    accessExpression (DOT (INITIALIZE | identifier))*
+    ((LPAR methodArgs RPAR) | ((INC | DEC)));
 
 //todo
-argDec
-    : type identifier ;
+returnStatement
+    :
+    RETURN (expression)?;
 
 //todo
-methodArgs
-    : (expression (COMMA expression)*)?;
-
-//todo
-body :
-     (blockStatement | (NEWLINE+ singleStatement));
-
-//todo
-blockStatement :
-    LBRACE NEWLINE+ (singleStatement NEWLINE+)* RBRACE;
-
-//todo
-singleStatement :
-    ifStatement | printStatement | methodCallStmt | returnStatement | assignmentStatement
-    | loopStatement | addStatement | mergeStatement | deleteStatement;
-
-//todo
-addStatement :
-    identifier DOT ADD LPAR orExpression RPAR;
-
-//todo
-mergeStatement :
-    identifier DOT MERGE LPAR orExpression (COMMA orExpression)* RPAR;
-
-//todo
-deleteStatement :
-    identifier DOT DELETE LPAR orExpression RPAR;
-
-//todo
-varDecStatement :
-    type identifier (COMMA ID2=IDENTIFIER)*;
-
-//todo
-ifStatement :
-    IF condition body
-    elsifStatement*
-    elseStatement?;
-
-//todo
-elsifStatement :
-     NEWLINE* ELSIF condition body;
-
-//todo
-condition :
-    (LPAR expression RPAR) | expression;
-
-//todo
-elseStatement :
-     NEWLINE* ELSE body;
-
-//todo
-printStatement :
-    PRINT LPAR expression RPAR;
-
-//todo
-methodCallStmt :
-    accessExpression  (DOT (INITIALIZE | identifier))*
-    ((LPAR methodArgs RPAR) | ((op = INC | op = DEC)));
-
-//todo
-returnStatement :
-    RETURN expression?;
-
-//todo
-assignmentStatement :
+assignmentStatement
+    :
     orExpression ASSIGN expression;
 
-//todo
-loopStatement :
+
+loopStatement
+    :
     ((accessExpression) | (LPAR expression DOT DOT expression RPAR)) DOT EACH DO BAR identifier BAR
-    body;
+    body
+    ;
 
-//todo
-expression:
-    ternaryExpression (ASSIGN expression)?;
+expression returns [Expression expressionRet]
+    :
+    te=ternaryExpression { $expressionRet = $te.ternaryExprRet; }
+    (a=ASSIGN e=expression
+    {
+        BinaryOperator op = BinaryOperator.assign;
+        $expressionRet = new BinaryExpression($expressionRet, $e.expressionRet, $op);
+        $expressionRet.setLine($op.getLine());
+    }
+    )?
+    (DOT inc=INCLUDE LPAR oe=orExpression RPAR
+    {
+        #expressionRet = new SetInclude($expressionRet, $oe.expressionRet);
+    }
+    )?
+    ;
 
-//todo
-ternaryExpression:
-    orExpression (TIF ternaryExpression TELSE ternaryExpression)*;
+ternaryExpression returns [Expression ternaryExprRet]
+    :
+    e1=orExpression { $ternaryExprRet = $e1.orExprRet; }
+    (q=TIF te=ternaryExpression TELSE fe=ternaryExpression
+    {
+        $ternaryExprRet = new TernaryExpression($ternaryExprRet ,$te.ternaryExprRet, $fe.ternaryExprRet);
+        $ternaryExprRet.setLine($q.getLine());
+    }
+    )?
+    ;
 
-//todo
-orExpression:
-    andExpression (OR andExpression)*;
+orExpression returns [Expression orExprRet]
+    :
+    e1=andExpression { $orExprRet = $e1.andExprRet }
+    (o=OR e2=andExpression
+    {
+        BinaryOperator op = BinaryOperator.or;
+        $orExprRet = new BinaryExpression($orExprRet, $e2.andExprRet, op);
+        $orExprRet.setLine($o.getLine());
+    } )*
+    ;
 
-//todo
-andExpression:
-    equalityExpression (AND equalityExpression)*;
+andExpression returns [Expression andExprRet]
+    :
+    e1=equalityExpression { $andExprRet = $e1.equalityExprRet; }
+    (o=AND e2=equalityExpression
+    {
+        BinaryOperator op = BinaryOperator.and;
+        $andExprRet = new BinaryExpression($andExprRet, $e2.equalityExprRet, op);
+        $andExprRet.setLine($o.getLine());
+    })*
+    ;
 
-//todo
-equalityExpression:
-    relationalExpression (EQUAL relationalExpression)*;
+equalityExpression returns [Expression equalityExprRet]
+    :
+    e1=relationalExpression { $equalityExprRet = $e1.relationalExprRet; }
+    (o=EQUAL e2=relationalExpression
+    {
+        BinaryOperator op = BinaryOperator.eq;
+        $equalityExprRet = new BinaryExpression($equalityExprRet, $e2.relationalExprRet, op);
+        $equalityExprRet.setLine($o.getLine());
+    }
+    )*
+    ;
 
-//todo
-relationalExpression:
-    additiveExpression ((GREATER_THAN | LESS_THAN) additiveExpression)*;
+relationalExpression returns [Expression relationalExprRet] locals [BinaryOperator op, int line]
+    :
+    e1=additiveExpression { $relationalExprRet = $e1.additiveExprRet; }
+    (
+    (o1=GREATER_THAN { $op = BinaryOperator.gt; $line = $o1.getLine();}
+    |
+    o2=LESS_THAN { $op = BinaryOperator.lt; $line = $o2.getLine(); }
+    )
+    e2=additiveExpression
+    {
+        $relationalExprRet = new BinaryExpression($relationalExprRet, $e2.additiveExprRet, $op);
+        $relationalExprRet.setLine($line);
+    }
+    )*
+    ;
 
-//todo
-additiveExpression:
-    multiplicativeExpression ((PLUS | MINUS) multiplicativeExpression)*;
+additiveExpression returns [Expression additiveExprRet] locals [BinaryOperator op, int line]
+    :
+    e1=multiplicativeExpression { $additiveExprRet = $e1.multExprRet; }
+    (
+    (o1=PLUS { $op = BinaryOperator.add; $line = $o1.getLine(); }
+    |
+    o2=MINUS { $op = BinaryOperator.sub; $line = $o2.getLine(); }
+    )
+    e2=multiplicativeExpression
+    {
+        $additiveExprRet = new BinaryExpression($additiveExprRet, $e2.multExprRet, $op);
+        $additiveExprRet.setLine($line);
+    }
+    )*
+    ;
 
-//todo
-multiplicativeExpression:
-    preUnaryExpression ((MULT | DIVIDE) preUnaryExpression)*;
+multiplicativeExpression returns [Expression multExprRet] locals [BinaryOperator op, int line]
+    :
+    e1=preUnaryExpression { $multExprRet = $e1.preUnaryExprRet; }
+    (
+    (o1=MULT {$op = BinaryOperator.mult; $line = $o1.getLine(); }
+    |
+    o2=DIVIDE { $op = BinaryOperator.div; $line = $o2.getLine(); }
+    )
+    e2=preUnaryExpression
+    {
+        $multExprRet = new BinaryExpression($multExprRet, $e2.preUnaryExprRet, $op);
+        $multExprRet.setLine($line);
+    }
+    )*
+    ;
 
-//todo
-preUnaryExpression:
-    ((NOT | MINUS) preUnaryExpression)
-    | postUnaryExpression;
+preUnaryExpression returns [Expression preUnaryExprRet] locals[UnaryOperator op, int line]
+    :
+    (
+    (o1=NOT { $op = UnaryOperator.not; $line = $o1.getLine(); }
+    |
+    o2=MINUS { $op = UnaryOperator.minus; $line = $o2.getLine(); }
+    )
+    e1=preUnaryExpression
+    {
+        $preUnaryExprRet = new UnaryExpression($e1.preUnaryExprRet, $op);
+        $preUnaryExprRet.setLine($line);
+    }
+    )
+    |
+    e2=postUnaryExpression { $preUnaryExprRet = $e2.postUnaryExprRet; }
+    ;
 
-//todo
-postUnaryExpression:
-    accessExpression ((INC | DEC))?;
+postUnaryExpression returns [Expression postUnaryExprRet]
+    :
+    e1=accessExpression { $postUnaryExprRet = $e1.accessExprRet; }
+    (
+    (o1=INC
+    {
+        UnaryOperator op1 = UnaryOperator.postinc;
+        $postUnaryExprRet = new UnaryExpression($postUnaryExprRet, $op1);
+        $postUnaryExprRet.setLine($o1.getLine());
+    }
+    |
+    o2=DEC
+    {
+        UnaryOperator op2 = UnaryOperator.postdec;
+        $postUnaryExprRet = new UnaryExpression($postUnaryExprRet, $op2);
+        $postUnaryExprRet.setLine($o2.getLine());
+    }
+    )
+    )?
+    ;
 
-//todo
-accessExpression:
-    otherExpression ((LPAR methodArgs RPAR) | (DOT (identifier | NEW | INITIALIZE)))*
-            ((DOT (identifier)) | (LBRACK expression RBRACK))*;
+accessExpression returns [Expression accessExprRet]
+    :
+    e1=otherExpression { $accessExprRet = $e1.otherExprRet; }
+    (
+    (lp=LPAR
+    m=methodArgs
+    {
+        $accessExprRet = new MethodCall($accessExprRet, $m.methodArgsRet);
+        $accessExprRet.setLine($lp.getLine());
+    }
+    RPAR
+    )
+    |
+    (DOT
+    (identifier | NEW | INITIALIZE)
+    )
+    )*
+    (
+    (DOT (id2=identifier))
+    |
+    (lb=LBRACK idx=expression RBRACK)
+    {
+        $accessExprRet = new ArrayAccessByIndex($accessExprRet, $idx.expressionRet);
+        $accessExprRet.setLine($lb.getLine());
+    }
+    )*
+    ;
 
-//todo
-otherExpression:
-    class_identifier | value | identifier | LPAR methodArgs RPAR | setNew | setInclude| accessByIndex;
+otherExpression returns [Expression otherExprRet]
+    :
+    c=class_identifier { $otherExprRet = $c.classIdentifierRet; }
+    | v=value { $otherExprRet = $v.valueRet;}
+    | id=identifier { $otherExprRet = $id.identifierRet; }
+    | sn=setNew { $otherExprRet = $sn.setNewRet; }
+    | LPAR ex=expression RPAR { $otherExprRet = $ex.expressionRet; }
+    ;
 
-//todo
-accessByIndex:
-    identifier LBRACK expression RBRACK;
 
-//todo
-setNew:
-    SET DOT NEW LPAR (LPAR orExpression (COMMA orExpression)* RPAR)? RPAR;
+setNew returns [SetNew setNewRet]
+    :
+    {
+        $setNewRet = new SetNew();
+        ArrayList<Expression> args = new ArrayList<>();
+    }
+    SET DOT NEW LPAR (LPAR o1=orExpression { args.add($o1.orExprRet) }
+    (COMMA o2=orExpression { args.add($o2.orExprRet) } )* RPAR)?  RPAR
+    ;
 
-//todo
-setInclude:
-    identifier DOT INCLUDE LPAR orExpression RPAR;
+value returns [Value valueRet]
+    :
+    v1=boolValue { $valueRet = $v1.boolValueRet; }
+    |
+    v2=INT_VALUE
+    {
+        $valueRet = new IntValue($v2.int);
+        $valueRet.setLine($v2.getLine());
+    }
+    ;
 
-//todo
-value :
-    boolValue | INT_VALUE;
+boolValue returns [BoolValue boolValueRet]
+    :
+    t=TRUE
+    {
+        $boolValueRet = new BoolValue(true);
+        $boolValueRet.setLine($t.getLine());
+    }
+    |
+    f=FALSE
+    {
+        $boolValueRet = new BoolValue(false);
+        $boolValueRet.setLine($f.getLine());
+    }
+    ;
 
-//todo
-boolValue:
-    TRUE | FALSE;
+class_identifier returns [ClassType classIdentifierRet]
+    :
+    id=CLASS_IDENTIFIER
+    { $classIdentifierRet = new ClassType($id.identifierRet); }
+    ;
 
-//todo
-class_identifier:
-    CLASS_IDENTIFIER;
+identifier returns [Identifier identifierRet, int line]
+    :
+    id=IDENTIFIER
+    {
+        $identifierRet = new Identifier($id.text);
+        $identifierRet.setLine($id.getLine());
+        $line = $id.getLine();
+    }
+    ;
 
-//todo
-identifier:
-    IDENTIFIER;
+type returns [Type typeRet]
+    :
+    INT { $typeRet = new IntType(); }
+    | BOOL { $typeRet = new BoolType(); }
+    | a=array_type { $typeRet = $a.arrayTypeRet; }
+    | f=fptr_type { $typeRet = $f.fptrTypeRet; }
+    | s=set_type { $typeRet = $s.setTypeRet; }
+    | c=class_identifier { $typeRet = $c.classIdentifierRet; }
+    ;
 
-//todo
-type:
-    INT | BOOL | array_type | fptr_type | set_type | class_identifier;
+array_type returns [ArrayType arrayTypeRet]
+    :
+    { $arrayTypeRet = new ArrayType(); }
+    (INT { $arrayTypeRet.setType(new IntType()); }
+    | BOOL { $arrayTypeRet.setType(new BoolType()); }
+    | c=class_identifier { $arrayTypeRet.setType(c.classIdentifierRet); }
+    )
+    { demensions = new ArrayList<Integer>(); }
+    (LBRACK e=expression RBRACK { demensions.add($e.expressionRet); })+
+    ;
 
-//todo
-array_type:
-    (INT | BOOL | class_identifier) (LBRACK expression RBRACK)+;
+fptr_type returns [FptrType fptrTypeRet]
+    :
+    {
+        $fptrTypeRet = new FptrType();
+        $fptrTypeRet.setArgumentsTypes(new ArrayList<Type>());
+    }
+    FPTR LESS_THAN
+    (
+    VOID
+    |
+    (t1=type { $fptrTypeRet.addArgumentType($t1.typeRet); }
+    (COMMA t2=type { $fptrTypeRet.addArgumentType($t2.typeRet); } )*
+    )
+    )
+    ARROW
+    (
+    t3=type { $fptrTypeRet.setReturnType($t3.typeRet); }
+    |
+    VOID { $fptrTypeRet.setReturnType(new NullType()); }
+    ) GREATER_THAN
+    ;
 
-//todo
-fptr_type:
-    FPTR LESS_THAN (VOID | (type (COMMA type)*)) ARROW (type | VOID) GREATER_THAN;
-
-//todo
-set_type:
-    SET LESS_THAN (INT) GREATER_THAN;
+set_type returns [SetType setTypeRet]
+    :
+    SET LESS_THAN (INT) GREATER_THAN
+    { $setTypeRet = new SetType(); }
+    ;
 
 
 LINE_BREAK: ('//\n') -> skip;
@@ -236,6 +611,7 @@ PUBLIC: 'public';
 PRIVATE: 'private';
 INITIALIZE: 'initialize';
 NEW: 'new';
+SELF: 'self';
 
 
 RETURN: 'return';
