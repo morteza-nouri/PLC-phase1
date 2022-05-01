@@ -57,7 +57,6 @@ constructor returns [ConstructorDeclaration constructorDecRet]
     }
     ;
 
-
 classDeclaration returns [ClassDeclaration classDeclarationRet]
     :
     c=CLASS cid1=class_identifier
@@ -344,11 +343,19 @@ assignmentStatement returns [AssignmentStmt assignmentStmtRet]
     }
     ;
 
-loopStatement returns [EachStmt loopStmtRet]
+loopStatement returns [EachStmt loopStmtRet] locals [Expression list]
     :
-    ((a=accessExpression) | (LPAR expression DOT DOT expression RPAR)) DOT each=EACH DO BAR i=identifier BAR
+    ((a=accessExpression {$list = $a.accessExprRet;})
+    |
+    (lp=LPAR e1=expression DOT DOT e2=expression RPAR
     {
-        $loopStmtRet = new EachStmt($i.identifierRet, $a.accessExprRet);
+        $list = new RangeExpression($e1.expressionRet, $e2.expressionRet);
+        $list.setLine($lp.getLine());
+    }
+    ))
+    DOT each=EACH DO BAR i=identifier BAR
+    {
+        $loopStmtRet = new EachStmt($i.identifierRet, $list.expressionRet);
         $loopStmtRet.setLine($each.getLine());
     }
     b=body { $loopStmtRet.setBody($b.bodyRet); }
@@ -532,7 +539,8 @@ accessExpression returns [Expression accessExprRet]
 
 otherExpression returns [Expression otherExprRet]
     :
-    c=class_identifier { $otherExprRet = $c.classIdentifierRet; }
+    s=SELF {$otherExprRet = new SelfClass(); $otherExprRet.setLine($s.getLine());}
+    | c=class_identifier { $otherExprRet = $c.classIdentifierRet; }
     | v=value { $otherExprRet = $v.valueRet;}
     | id=identifier { $otherExprRet = $id.identifierRet; }
     | sn=setNew { $otherExprRet = $sn.setNewRet; }
