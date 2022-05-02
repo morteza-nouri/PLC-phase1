@@ -102,6 +102,7 @@ classDeclaration returns [ClassDeclaration classDeclarationRet]
 
 decleration returns [ArrayList<Declaration> declarationRet] locals [boolean isPrivate]
     :
+    {$declarationRet = new ArrayList<>();}
     ((( (PUBLIC {$isPrivate = false;} | PRIVATE {$isPrivate = true;} )
     (v=varDecStatement
     {
