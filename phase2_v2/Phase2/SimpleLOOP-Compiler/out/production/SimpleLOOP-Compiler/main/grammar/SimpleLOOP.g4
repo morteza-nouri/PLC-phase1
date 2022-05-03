@@ -52,7 +52,9 @@ classDeclaration returns[ClassDeclaration classDeclarationRet]
     : line = CLASS
      c = class_identifier {$classDeclarationRet = new ClassDeclaration($c.class_id);
                        $classDeclarationRet.setLine($line.getLine());}
-    (LESS_THAN class_identifier)?
+    (LESS_THAN cid2=class_identifier
+            { $classDeclarationRet.setParentClassName($cid2.class_id); }
+        )?
     NEWLINE* ((LBRACE NEWLINE+ (field_decleration[$classDeclarationRet] NEWLINE+)+ RBRACE) | (field_decleration[$classDeclarationRet]));
 //todo
 field_decleration[ClassDeclaration classDecl]
@@ -116,12 +118,12 @@ methodBody returns[ArrayList<Statement> methodBodyRet,ArrayList<VariableDeclarat
 methodArgsDec returns [ArrayList<VariableDeclaration> args]
     :
     {$args = new ArrayList<VariableDeclaration>();}
-    LPAR
-    (arg=argDec {$args.add($arg.arg);} ((ASSIGN orExpression) | (COMMA arg = argDec {$args.add($arg.arg);})*) (COMMA arg=argDec {$args.add($arg.arg);} ASSIGN orExpression)*)? RPAR ;
+    line=LPAR
+    (arg=argDec[$line.getLine()] {$args.add($arg.arg);} ((ASSIGN orExpression) | (COMMA arg = argDec[$line.getLine()] {$args.add($arg.arg);})*) (COMMA arg=argDec[$line.getLine()] {$args.add($arg.arg);} ASSIGN orExpression)*)? RPAR ;
 
 //todo: done
-argDec returns [VariableDeclaration arg]: t=type id=identifier
-       {$arg = new VariableDeclaration($id.id,$t.typeRet);};
+argDec[int line] returns [VariableDeclaration arg]: t=type id=identifier
+       {$arg = new VariableDeclaration($id.id,$t.typeRet); $arg.setLine($line);};
 
 //todo: done
 methodArgs returns [ArrayList<Expression> methodArgsRet]:
@@ -298,6 +300,7 @@ methodCallStmt returns [MethodCallStmt methodCallStmtRet]
         MethodCall methodCall = new MethodCall($ae.accessExpressionRet, $mArgs.methodArgsRet);
         methodCall.setLine($lpar.getLine());
         $methodCallStmtRet = new MethodCallStmt(methodCall);
+        $methodCallStmtRet.setLine($lpar.getLine());
     }
     ;
 

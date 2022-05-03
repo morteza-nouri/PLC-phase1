@@ -6,7 +6,7 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/SimpleLOOP-Compiler/src/main/grammar/SimpleLOOP.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="C:\Users\saeed\Desktop\DesignCompiler\Phase2\SimpleLOOP-Compiler\src" />
+          <option name="outputDir" value="C:\Users\saeed\Desktop\PLC\Compiler-and-Programming-Languages-Design\phase2_v2\Phase2\SimpleLOOP-Compiler\src" />
           <option name="libDir" value="" />
           <option name="encoding" value="" />
           <option name="pkg" value="parsers" />
@@ -16,7 +16,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" project-jdk-name="17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>
