@@ -50,11 +50,14 @@ public class ASTTreePrinter extends Visitor<Void> {
         messagePrinter(constructorDeclaration.getLine(), constructorDeclaration.toString());
         constructorDeclaration.getMethodName().accept(this);
         for (VariableDeclaration arg : constructorDeclaration.getArgs())
-            arg.accept(this);
+            if (arg != null)
+                arg.accept(this);
         for (VariableDeclaration localVar : constructorDeclaration.getLocalVars())
-            localVar.accept(this);
+            if (localVar != null)
+                localVar.accept(this);
         for (Statement statement : constructorDeclaration.getBody())
-            statement.accept(this);
+            if (statement != null)
+                statement.accept(this);
         return null;
     }
 
@@ -96,18 +99,26 @@ public class ASTTreePrinter extends Visitor<Void> {
     @Override
     public Void visit(BlockStmt blockStmt) {
         messagePrinter(blockStmt.getLine(), blockStmt.toString());
-        for (Statement statement : blockStmt.getStatements())
-            statement.accept(this);
+
+        if (blockStmt != null)
+            for (Statement statement : blockStmt.getStatements())
+                if (statement != null)
+                    statement.accept(this);
         return null;
     }
 
     @Override
     public Void visit(ConditionalStmt conditionalStmt) {
         messagePrinter(conditionalStmt.getLine(), conditionalStmt.toString());
-        conditionalStmt.getCondition().accept(this);
-        conditionalStmt.getThenBody().accept(this);
-        for (ElsifStmt elsifStmt : conditionalStmt.getElsif())
-            elsifStmt.accept(this);
+        if (conditionalStmt.getCondition() != null)
+            conditionalStmt.getCondition().accept(this);
+        if (conditionalStmt.getThenBody() != null)
+            conditionalStmt.getThenBody().accept(this);
+
+        if (conditionalStmt.getElsif() != null)
+            for (ElsifStmt elsifStmt : conditionalStmt.getElsif())
+                if (elsifStmt != null)
+                    elsifStmt.accept(this);
         if (conditionalStmt.getElseBody() != null)
             conditionalStmt.getElseBody().accept(this);
         return null;
