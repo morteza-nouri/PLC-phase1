@@ -75,6 +75,7 @@
 package main;
 
 import main.visitor.name.ASTTreePrinter;
+import main.visitor.utils.ErrorPrinter;
 import parsers.*;
 import main.ast.nodes.Program;
 import org.antlr.v4.runtime.CharStream;
@@ -89,16 +90,15 @@ public class SimpleLOOPCompiler {
         Program program = simpleLOOPParser.simpleLOOP().simpleLOOPProgram;
 
         // Todo
-//        ErrorPrinter errorPrinter = new ErrorPrinter();
+        ErrorPrinter errorPrinter = new ErrorPrinter();
 //        NameAnalyzer nameAnalyzer = new NameAnalyzer(program);
         ASTTreePrinter astTreePrinter = new ASTTreePrinter();
-//
 //        nameAnalyzer.analyze();
-//        int numberOfErrors = program.accept(errorPrinter);
-//        if(numberOfErrors > 0) {
-//            //System.out.println("\n" + numberOfErrors + " errors detected");
-//            System.exit(1);
-//        }
+        int numberOfErrors = program.accept(errorPrinter);
+        if(numberOfErrors > 0) {
+            System.out.println("\n" + numberOfErrors + " errors detected");
+            System.exit(1);
+        }
         program.accept(astTreePrinter);
     }
 }

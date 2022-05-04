@@ -63,7 +63,6 @@ public class ASTTreePrinter extends Visitor<Void> {
             }
 
         if (constructorDeclaration.getBody() != null)
-
             for(Statement body : constructorDeclaration.getBody()) {
                 body.accept(this);
             }
